@@ -19,6 +19,8 @@ class Books extends Model
                            'pages',
                            'categories'];
 
+    protected $guarded = ['id', 'created_at','updated_at'];
+
     public static function getAllBooks()
     {
         return self::all();

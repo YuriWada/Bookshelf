@@ -21,31 +21,33 @@ class GoogleApiService implements BookApiInterface
         return self::$api_name;
     }
 
-    public function searchBooks($query)
+    public static function getBooksByCategory(string $category): JsonResponse
     {
-        $response = Http::get('https://www.googleapis.com/books/v1/volumes', [
-            'q' => $query,
-            'key' => self::$api_key,
-        ]);
+        $client = new Client(['verify' => false]);
 
-        $livros = $response->json()['items'];
+        $url = "https://www.googleapis.com/books/v1/volumes?q=" . $category . "+subject&api_key=" . self::$api_key;
 
-        foreach ($livros as $livro) {
-            Books::updateOrCreate(
-                ['isbn' => $livro['id']],
-                [
-                    'title' => $livro['volumeInfo']['title'] ?? null,
-                    'author' => implode(', ', $livro['volumeInfo']['authors'] ?? []),
-                    'overview' => $livro['volumeInfo']['description'] ?? null,
-                    'published_date' => isset($livro['volumeInfo']['publishedDate']) ? Carbon::parse($livro['volumeInfo']['publishedDate']) : null,
-                    'isbn' => $livro['id'],
-                    'image_url' => $livro['volumeInfo']['imageLinks']['thumbnail'] ?? null,
-                    'pages' => $livro['volumeInfo']['pageCount'] ?? null,
-                    'categories' => implode(', ', $livro['volumeInfo']['categories'] ?? []),
-                ]
-            );
+        try {
+            $response = $client->request("GET", $url);
+            $data = json_decode($response->getBody(), true);
+            return response()->json($data["items"]);
+        } catch (\Exception $e) {
+            return response()->json(["error" => $e->getMessage()], 500);
         }
+    }
 
-        return $livros;
+    public static function getBooksByKeyword(string $keyword): JsonResponse
+    {
+        $client = new Client(['verify' => false]);
+
+        $url = "https://www.googleapis.com/books/v1/volumes?q=" . $keyword . "+intitle&api_key=" . self::$api_key;
+
+        try {
+            $response = $client->request("GET", $url);
+            $data = json_decode($response->getBody(), true);
+            return response()->json($data["items"]["volumeInfo"]["title"]);
+        } catch (\Exception $e) {
+            return response()->json(["error" => $e->getMessage()], 500);
+        }
     }
 }

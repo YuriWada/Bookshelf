@@ -6,5 +6,6 @@ use Illuminate\Http\JsonResponse;
 interface BookApiInterface {
     public static function getApiName(): String;
 
-    public function searchBooks($query);
+    public static function getBooksByCategory(string $category);
+    public static function getBooksByKeyword(string $keyword);
 }
